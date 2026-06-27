@@ -59,3 +59,21 @@ export const careerSchema = z.object({
       return allowedTypes.includes(f.type);
     }, "Please upload a valid PDF, DOC, or DOCX file under 5MB."),
 });
+
+export const sendEmailSchema = z.object({
+  senderEmail: z.string().email("Please enter a valid Gmail address.").optional().or(z.literal("")),
+  senderPassword: z.string().min(8, "App passwords are usually 16 characters.").optional().or(z.literal("")),
+  to: z.string().email("Please enter a valid recipient email address."),
+  subject: z.string().min(1, "Please enter a subject."),
+  message: z.string().min(1, "Please enter a message."),
+  attachment: z
+    .any()
+    .optional()
+    .refine((file) => {
+      if (!file || file.length === 0) return true; // Optional
+      const f = file[0];
+      if (!f) return true;
+      if (f.size > 5 * 1024 * 1024) return false; // 5MB limit
+      return true;
+    }, "Please upload a valid file under 5MB."),
+});

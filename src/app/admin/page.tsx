@@ -14,6 +14,7 @@ import {
   FileText,
   MessageSquare,
 } from "lucide-react";
+import { SendEmailForm } from "@/components/SendEmailForm";
 
 type CareerApplication = {
   _id: string;
@@ -44,7 +45,7 @@ type ContactEnquiry = {
 };
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"careers" | "contacts">("careers");
+  const [activeTab, setActiveTab] = useState<"careers" | "contacts" | "send-email">("careers");
   const [careerApplications, setCareerApplications] = useState<
     CareerApplication[]
   >([]);
@@ -57,6 +58,9 @@ export default function AdminDashboard() {
   const [selectedEnquiry, setSelectedEnquiry] = useState<ContactEnquiry | null>(
     null,
   );
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [replyToEmail, setReplyToEmail] = useState("");
+  const [replySubject, setReplySubject] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -189,6 +193,16 @@ export default function AdminDashboard() {
               >
                 Contact Enquiries ({contactEnquiries.length})
               </button>
+              <button
+                onClick={() => setActiveTab("send-email")}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "send-email"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                }`}
+              >
+                Send Email
+              </button>
             </nav>
           </div>
         </div>
@@ -269,6 +283,17 @@ export default function AdminDashboard() {
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setReplyToEmail(app.email);
+                              setReplySubject(`Reply to Career Application - ${app.fullName}`);
+                              setShowReplyModal(true);
+                            }}
+                            className="text-teal-600 hover:text-teal-800"
+                            title="Send Email"
+                          >
+                            <Mail className="h-4 w-4" />
                           </button>
                           {app.resumeFileId && (
                             <button
@@ -361,6 +386,17 @@ export default function AdminDashboard() {
                           >
                             <Eye className="h-4 w-4" />
                           </button>
+                          <button
+                            onClick={() => {
+                              setReplyToEmail(enquiry.email);
+                              setReplySubject(`Reply to Contact Enquiry - ${enquiry.subject}`);
+                              setShowReplyModal(true);
+                            }}
+                            className="text-teal-600 hover:text-teal-800"
+                            title="Send Email"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </button>
                           {enquiry.attachmentFileId && (
                             <button
                               onClick={() =>
@@ -382,6 +418,12 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === "send-email" && (
+          <div className="max-w-4xl mx-auto">
+            <SendEmailForm />
           </div>
         )}
 
@@ -427,9 +469,22 @@ export default function AdminDashboard() {
                     <label className="block text-sm font-medium text-slate-700">
                       Email
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
-                      {selectedApplication.email}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm text-slate-900">
+                        {selectedApplication.email}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setReplyToEmail(selectedApplication.email);
+                          setReplySubject(`Reply to Career Application - ${selectedApplication.fullName}`);
+                          setShowReplyModal(true);
+                        }}
+                        className="text-teal-600 hover:text-teal-800"
+                        title="Send Email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700">
@@ -546,9 +601,22 @@ export default function AdminDashboard() {
                     <label className="block text-sm font-medium text-slate-700">
                       Email
                     </label>
-                    <p className="mt-1 text-sm text-slate-900">
-                      {selectedEnquiry.email}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm text-slate-900">
+                        {selectedEnquiry.email}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setReplyToEmail(selectedEnquiry.email);
+                          setReplySubject(`Reply to Contact Enquiry - ${selectedEnquiry.subject}`);
+                          setShowReplyModal(true);
+                        }}
+                        className="text-teal-600 hover:text-teal-800"
+                        title="Send Email"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700">
@@ -602,6 +670,35 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Email Reply Modal */}
+        {showReplyModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60] backdrop-blur-sm transition-all duration-350">
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  Compose Reply
+                </h3>
+                <button
+                  onClick={() => setShowReplyModal(false)}
+                  className="rounded-full bg-slate-100 p-2 text-slate-500 hover:text-slate-800 transition hover:bg-slate-200"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6">
+                <SendEmailForm
+                  prefilledTo={replyToEmail}
+                  prefilledSubject={replySubject}
+                  onSuccess={() => {
+                    setTimeout(() => setShowReplyModal(false), 2000);
+                  }}
+                />
               </div>
             </div>
           </div>

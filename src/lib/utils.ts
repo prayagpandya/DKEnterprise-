@@ -10,6 +10,15 @@ export function formatNumber(value: number) {
 }
 
 export function getAbsoluteUrl(path = '') {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dkenterprise.example.com';
-  return new URL(path, siteUrl).toString();
+  let siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dkenterprise.example.com';
+  
+  if (!siteUrl.startsWith('http://') && !siteUrl.startsWith('https://')) {
+    siteUrl = `https://${siteUrl}`;
+  }
+  
+  siteUrl = siteUrl.replace(/\/$/, '');
+  
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  return `${siteUrl}${cleanPath}`;
 }

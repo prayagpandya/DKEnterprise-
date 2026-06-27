@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
-import { MongoClient, GridFSBucket } from "mongodb";
-
 import { careerSchema } from "@/lib/form-schemas";
 import { createSubmissionPdf, sendNotificationEmail } from "@/lib/form-utils";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const MONGODB_URI =
-  "mongodb+srv://mkdigital:MvM2323@cluster0.pmw3ac4.mongodb.net/?appName=Cluster0";
-const DATABASE_NAME = "dk-enterprise";
-const COLLECTION_NAME = "career_applications";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  let client: MongoClient | null = null;
   try {
     const formData = await request.formData();
     const parsed = careerSchema.safeParse({
@@ -43,52 +34,6 @@ export async function POST(request: Request) {
     }
 
     const resume = formData.get("resume");
-    if (resume instanceof File && resume.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { success: false, message: "Resume must be under 5MB." },
-        { status: 400 },
-      );
-    }
-
-    // Connect to MongoDB
-    client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db(DATABASE_NAME);
-    const collection = db.collection(COLLECTION_NAME);
-
-    let resumeFileId = null;
-
-    // Store resume using GridFS if present
-    if (resume instanceof File) {
-      const bucket = new GridFSBucket(db, { bucketName: "resumes" });
-      const uploadStream = bucket.openUploadStream(resume.name, {
-        metadata: {
-          contentType: resume.type || "application/octet-stream",
-          originalName: resume.name,
-          size: resume.size,
-          uploadedAt: new Date(),
-        },
-      });
-
-      const buffer = await resume.arrayBuffer();
-      await new Promise((resolve, reject) => {
-        uploadStream.once("error", reject);
-        uploadStream.once("finish", resolve);
-        uploadStream.end(Buffer.from(buffer));
-      });
-
-      resumeFileId = uploadStream.id;
-    }
-
-    // Prepare data for MongoDB
-    const applicationData = {
-      ...parsed.data,
-      resumeFileId,
-      submittedAt: new Date(),
-    };
-
-    // Insert into MongoDB
-    await collection.insertOne(applicationData);
 
     const fields = {
       Salutation: parsed.data.salutation || "N/A",
@@ -109,32 +54,43 @@ export async function POST(request: Request) {
       "Career Application Summary",
       fields,
     );
-    const emailResult = await sendNotificationEmail({
-      title: "New Career Application",
-      subject: `Career Application | ${parsed.data.fullName}`,
-      fields,
-      attachment:
-        resume instanceof File
-          ? {
-              filename: resume.name,
-              content: Buffer.from(await resume.arrayBuffer()),
-              contentType: resume.type || "application/octet-stream",
-            }
-          : undefined,
-    });
+
+    let emailSent = false;
+    let emailStatus = "Email notification skipped because SMTP is not configured yet.";
+
+    try {
+      const emailResult = await sendNotificationEmail({
+        title: "New Career Application",
+        subject: `Career Application | ${parsed.data.fullName}`,
+        fields,
+        attachment:
+          resume instanceof File
+            ? {
+                filename: resume.name,
+                content: Buffer.from(await resume.arrayBuffer()),
+                contentType: resume.type || "application/octet-stream",
+              }
+            : undefined,
+      });
+      emailSent = emailResult.sent;
+      if (emailSent) {
+        emailStatus = "Notification email delivered to the configured recruitment inbox.";
+      }
+    } catch (emailError) {
+      console.error("Error sending career notification email:", emailError);
+      emailStatus = "Notification email delivery failed (check SMTP settings).";
+    }
 
     return NextResponse.json({
       success: true,
       message:
         "Application submitted successfully. Your acknowledgement PDF is downloading now.",
-      emailStatus: emailResult.sent
-        ? "Notification email delivered to the configured recruitment inbox."
-        : "Email notification skipped because SMTP is not configured yet.",
+      emailStatus,
       pdfBase64: pdfBuffer.toString("base64"),
       pdfFileName: "dk-enterprise-career-application.pdf",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Careers form error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -142,9 +98,5 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     );
-  } finally {
-    if (client) {
-      await client.close();
-    }
   }
 }

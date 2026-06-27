@@ -20,7 +20,7 @@ export default function TimelinePage() {
         kicker="Our Timeline"
         title="A recent journey of modernisation, resilience, and growth."
         description="From operating discipline to sustainability and leadership development, each milestone reflects our commitment to better service delivery."
-        image="https://images.unsplash.com/photo-1508833319283-fef360931d0b?auto=format&fit=crop&w=1600&q=80"
+        image="/assets/images/hero_facility_management.png"
       />
 
       <section className="relative w-full overflow-hidden bg-[#f5f5f5] py-20">

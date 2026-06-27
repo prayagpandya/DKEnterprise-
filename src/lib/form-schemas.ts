@@ -12,7 +12,7 @@ export const contactSchema = z.object({
   phone: z.string().min(8, "Please enter a valid phone number."),
   companyName: z.string().optional(),
   companySize: z.string().optional(),
-  country: z.string().min(1, "Please select a country."),
+  country: z.string().default("India"),
   state: z.string().optional(),
   city: z.string().optional(),
   inquiryReason: z.string().min(1, "Please select an inquiry reason."),

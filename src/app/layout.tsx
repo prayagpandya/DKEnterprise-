@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     default: "DK Enterprise | Enterprise Facility Management",
     template: "%s | DK Enterprise",
   },
+  icons: {
+    icon: "/icon.png",
+  },
   description:
     "DK Enterprise delivers integrated facility management, security services, and environmental support across government, commercial, hospitality, and healthcare sectors.",
   openGraph: {

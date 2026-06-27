@@ -56,6 +56,10 @@ export function ContactForm() {
     formState: { errors },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      country: "India",
+      agreeToTerms: false,
+    },
   });
 
   const onSubmit = (values: ContactFormValues) => {

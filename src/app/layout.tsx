@@ -15,7 +15,9 @@ export const metadata: Metadata = {
     template: "%s | DK Enterprise",
   },
   icons: {
-    icon: "/icon.png",
+    icon: "/logos/icon.png",
+    shortcut: "/logos/icon.png",
+    apple: "/logos/icon.png",
   },
   description:
     "DK Enterprise delivers integrated facility management, security services, and environmental support across government, commercial, hospitality, and healthcare sectors.",
@@ -49,7 +51,7 @@ export default function RootLayout({
         <Navbar />
         <main className="overflow-hidden pt-16">{children}</main>
         <Saperator />
-       
+
 
         <Footer />
       </body>

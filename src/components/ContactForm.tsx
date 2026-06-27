@@ -88,8 +88,7 @@ export function ContactForm() {
       setServerMessage(result.message);
       setEmailStatus(result.emailStatus ?? null);
 
-      if (result.success && result.pdfBase64 && result.pdfFileName) {
-        downloadBase64Pdf(result.pdfBase64, result.pdfFileName);
+      if (result.success) {
         reset();
       }
     });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { contactSchema } from "@/lib/form-schemas";
-import { createSubmissionPdf, sendNotificationEmail } from "@/lib/form-utils";
+import { sendNotificationEmail } from "@/lib/form-utils";
 
 export const runtime = "nodejs";
 
@@ -48,11 +48,6 @@ export async function POST(request: Request) {
       Message: parsed.data.message,
     };
 
-    const pdfBuffer = await createSubmissionPdf(
-      "Contact Enquiry Summary",
-      fields,
-    );
-
     let emailSent = false;
     let emailStatus = "Email notification skipped because SMTP is not configured yet.";
 
@@ -73,11 +68,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message:
-        "Your enquiry has been submitted successfully. The summary PDF is downloading now.",
+      message: "Your enquiry has been submitted successfully.",
       emailStatus,
-      pdfBase64: pdfBuffer.toString("base64"),
-      pdfFileName: "dk-enterprise-contact-enquiry.pdf",
     });
   } catch (error) {
     console.error("Contact form error:", error);
